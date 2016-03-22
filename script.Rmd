@@ -1,0 +1,17 @@
+---
+title: "Predicting Customer Satisfaction"
+output: html_document
+---
+
+```{r, setup, include=FALSE}
+trainingData <- read.csv("Data/train.csv")
+trainingData <- data.frame(trainingData)
+```
+```{r, explore, include=FALSE}
+head(trainingData)
+nrow(trainingData)
+ncol(trainingData)
+
+
+```
+
