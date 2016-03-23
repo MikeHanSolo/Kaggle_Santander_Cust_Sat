@@ -4,14 +4,35 @@ output: html_document
 ---
 
 ```{r, setup, include=FALSE}
-trainingData <- read.csv("Data/train.csv")
-trainingData <- data.frame(trainingData)
-```
-```{r, explore, include=FALSE}
-head(trainingData)
-nrow(trainingData)
-ncol(trainingData)
+libs <- c("pastecs", "xgboost", "methods", "data.table", "magrittr", "bit64")
+lapply(libs, require, character.only = T)
 
-
+train <- fread("Data/train.csv", header = T, stringsAsFactors = T)
+test <- fread("Data/test.csv", header = T, stringsAsFactors = T)
 ```
+```{r, explore}
+#Check sizes of data.frames
+dim(train)
+dim(test)
+
+#Prevew training and test 
+train[1:10, 1:5, with = F]
+test[1:10, 1:5, with = F]
+
+#Drop ID columns from both data sets
+train[, ID := NULL]
+test[, ID := NULL]
+
+#Preview target variable
+train[1:10, ncol(train), with = F]
+test[1:10, ncol(test), with = F]
+targetVar <- names(train)[ncol(train)]
+
+train <- train[, lapply(.SD, as.numeric)] %>% as.matrix
+test <- test[, lapply(.SD, as.numeric)] %>% as.matrix
+```
+```{r, clean}
+noVar <- names(train[, sapply(train, function(v) var(v, na.rm = T) == 0)])
+```
+
 
