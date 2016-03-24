@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r, setup, include=FALSE}
-libs <- c("pastecs", "xgboost", "methods", "data.table", "magrittr", "bit64")
+libs <- c("pastecs", "xgboost", "methods", "data.table", "magrittr", "bit64", "caret")
 lapply(libs, require, character.only = T)
 
 train <- fread("Data/train.csv", header = T, stringsAsFactors = T)
@@ -25,14 +25,19 @@ test[, ID := NULL]
 
 #Preview target variable
 train[1:10, ncol(train), with = F]
-test[1:10, ncol(test), with = F]
 targetVar <- names(train)[ncol(train)]
 
-train <- train[, lapply(.SD, as.numeric)] %>% as.matrix
-test <- test[, lapply(.SD, as.numeric)] %>% as.matrix
+train <- train[, lapply(.SD, as.numeric)] %>% as.data.frame
+test <- test[, lapply(.SD, as.numeric)] %>% as.data.frame
 ```
 ```{r, clean}
-noVar <- names(train[, sapply(train, function(v) var(v, na.rm = T) == 0)])
+#Remove variables with no variance
+noVar <- colnames(train[, sapply(train, function(x) var(x, na.rm = T) == 0)])
+train2 <- train[, !(colnames(train) %in% noVar)]
+
+#Remove variables that are linear combinations
+linCombos <- findLinearCombos(train2)
+
 ```
 
 
