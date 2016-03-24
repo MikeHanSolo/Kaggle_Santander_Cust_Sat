@@ -10,34 +10,45 @@ lapply(libs, require, character.only = T)
 train <- fread("Data/train.csv", header = T, stringsAsFactors = T)
 test <- fread("Data/test.csv", header = T, stringsAsFactors = T)
 ```
-```{r, explore}
+```{r, stage}
 #Check sizes of data.frames
 dim(train)
 dim(test)
 
-#Prevew training and test 
+#Prevew training, test, and target var 
 train[1:10, 1:5, with = F]
 test[1:10, 1:5, with = F]
+train[1:10, ncol(train), with = F]
 
 #Drop ID columns from both data sets
 train[, ID := NULL]
 test[, ID := NULL]
 
-#Preview target variable
-train[1:10, ncol(train), with = F]
-targetVar <- names(train)[ncol(train)]
-
+#Put into data.frame
 train <- train[, lapply(.SD, as.numeric)] %>% as.data.frame
 test <- test[, lapply(.SD, as.numeric)] %>% as.data.frame
 ```
-```{r, clean}
+```{r, var_select}
 #Remove variables with no variance
 noVar <- colnames(train[, sapply(train, function(x) var(x, na.rm = T) == 0)])
 train2 <- train[, !(colnames(train) %in% noVar)]
 
 #Remove variables that are linear combinations
 linCombos <- findLinearCombos(train2)
+train3 <- train2[, -linCombos$remove]
 
+#Remove variables that are highly correlated
+varCor <- cor(train3)
+highCor <- findCorrelation(varCor, cutoff = .999)
+train4 <- train3[, -highCor]
+```
+```{r, crossVal}
+numClasses <- length(unique(targetVar$TARGET))
+
+params <- list("objective" = "multi:softprob", "eval_metric" = "mlogloss", "num_class" = numClasses)
+
+cv.nround <- 5
+cv.nfold <- 3
 ```
 
 
